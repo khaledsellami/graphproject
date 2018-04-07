@@ -2,19 +2,32 @@
 #include<cmath>
 #include<QMouseEvent>
 #include<cstdlib>
+#include <QPaintEvent>
+#include<QPen>
+
+
+
 mainwindow::mainwindow(QWidget *parent) : QWidget(parent)
 {
 setFixedSize(800, 600);
+setUpdatesEnabled(true);
+close = new QPushButton("Close",this);
+close->setGeometry(10,560,80,30);
+close->show();
+connect(close, SIGNAL(clicked()), QApplication::instance(), SLOT (quit()));
 }
 
 bool mainwindow::getchecked()
 {return checked ;}
+
 Button* mainwindow::getcheckeditem()
 {return checkeditem ;}
+
 void mainwindow::setcheckeditem(Button* b)
 {
     mainwindow::checkeditem=b;
 }
+
 void mainwindow::setifchecked(bool v)
 {
     checked=v;
@@ -40,48 +53,53 @@ void mainwindow::mousePressEvent(QMouseEvent *event)
             item->setText(itemn_str);
             item->setGeometry((event->x())-25, (event->y())- 25,50,50);
             item->show();
-            itemlist.insert(itemn,item);
+            itemlist.append(item);
             itemn++;
         }
     }
+    repaint();
     return;
 
 }
-QLine MinimumSideDistance(Button *b1 , Button *b2)
-{
-   QLine line;
-   int x,y,x1,x2,y1,y2,i,j,xs,ys;
-   float min=10000;
-   x1=b1->x();
-   y1=b1->y();
-   x2=b2->x();
-   y2=b2->y();
-   for(i=0;i<2;i++)
-       for(j=0;j<2;j++)
-       {
-           x=x1-25-i*25+j*25;
-           y=y1-50+j*25+i*25;
-           for(int k=0;k<2;k++)
-               for(int l=0;l<2;l++)
-               {
-                   xs=x2-25-k*25+l*25;
-                   ys=y2-50+k*25+l*25;
-                   if(min>sqrt(pow(xs-x,2)+pow(ys-y,2)))
-                   {
-                       min=sqrt(pow(xs-x,2)+pow(ys-y,2));
-                       line.setLine(x,y,xs,ys);
-                   }
-               }
 
-
-       }
-   return line ;
-}
-
- QLine* mainwindow::drawlink(Button* b1,Button* b2)
+void mainwindow::paintEvent(QPaintEvent*  )
  {
-     QLine* l=new QLine;
-     *l=MinimumSideDistance(b1,b2);
-     return l;
+    QPainter *painter = new QPainter(this);
+
+
+     QPen linepen(Qt::darkGray);
+     linepen.setWidth(3);
+
+
+
+     linepen.setStyle( Qt::SolidLine );
+     painter->setPen(linepen);
+     for(int i=0;i<itemlist.size();i++)
+     {for(int j=0;j<itemrelations[itemlist[i]].size();j++)
+
+         {
+             painter->drawLine(* (itemrelations[itemlist[i]][j].line));
+         }
+
+
+     }
+
+        update();
+        painter->end();
  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

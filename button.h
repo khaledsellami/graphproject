@@ -6,11 +6,18 @@
 #include<QLabel>
 #include<QEventLoop>
 
+
 class Button : public QToolButton
 {
+private:
+    bool moveevent=false;
 public:
-    explicit Button(QWidget *) ;//parent);
+    explicit Button(QWidget *) ;
     void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent*);
+    void mouseReleaseEvent(QMouseEvent*);
+
+
 };
 
 struct relatedbutton
