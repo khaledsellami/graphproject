@@ -13,12 +13,17 @@ class mainwindow : public QWidget
 {
     Q_OBJECT
 private:
-    int itemn=0;
+
     bool checked=false ;
     Button* checkeditem=NULL ;
     QPushButton* close=NULL ;
+    QLabel *l=NULL;
+     QPushButton* Djikstrabutton=NULL;
+
 
 protected:
+int itemn=0;
+
 
 public:
 
@@ -39,6 +44,52 @@ public:
 signals:
 
 public slots:
+    void Resetall()
+        {
+
+        for(int i=0;i<itemlist.size();i++)
+
+        {
+            for(int j=0;j<itemrelations[itemlist[i]].size();j++)
+               { delete itemrelations[itemlist[i]][j].line;
+                 delete itemrelations[itemlist[i]][j].label;
+            }
+            itemrelations[itemlist[i]].clear();
+            delete itemlist[i] ;
+
+
+          }
+        itemlist.clear();
+        itemrelations.clear();
+         }
+
+    void SD()
+    {l->setText("Solution with Djikstra's algorithm...");};
+
+    void SB()
+    {l->setText("Solution with Bellman's algorithm...");};
+
+    void SF()
+    {l->setText("Solution with Floyd's algorithm...");};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 };
+
+
+
+
 
 #endif // MAINWINDOW_H

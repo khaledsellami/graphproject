@@ -2,8 +2,9 @@
 #include"mainwindow.h"
 #include <QPainter>
 
-QLine MinimumSideDistance(int x1,int y1,int x2,int y2)//function to be used later
+QLine MinimumSideDistance(int x1,int y1,int x2,int y2)
 {
+    //function to be used later: it determines the minimum distance line connecting between the sides of the buttons
    QLine line;
    int x,y,i,j,xs,ys;
    float min=10000;
@@ -11,23 +12,25 @@ QLine MinimumSideDistance(int x1,int y1,int x2,int y2)//function to be used late
    for(i=0;i<2;i++)
        for(j=0;j<2;j++)
        {
-           x=x1+25+i*25-j*25;
-           y=y1+50-j*25-i*25;
+           x=x1+30+i*30-j*30;
+           y=y1+55-j*30-i*30;
 
            for(int k=0;k<2;k++)
                for(int l=0;l<2;l++)
                {
-                   xs=x2+25+k*25-l*25;
-                   ys=y2+50-k*25-l*25;
+                   xs=x2+30+k*30-l*30;
+                   ys=y2+55-k*30-l*30;
                    if(min>sqrt(pow(xs-x,2)+pow(ys-y,2)))
                    {
                        min=sqrt(pow(xs-x,2)+pow(ys-y,2));
-                       line.setLine(x,y,xs,ys);
+                       line.setLine(x-5,y,xs-5,ys);
+
                    }
                }
 
 
        }
+
    return line ;
 }
 
@@ -37,7 +40,6 @@ QLine MinimumSideDistance(int x1,int y1,int x2,int y2)//function to be used late
 Button::Button(QWidget* parent):QToolButton(parent)
 {
     setCheckable(true);
-    //setStyleSheet("background: #808080");
 }
 
 
@@ -50,8 +52,8 @@ void Button::mousePressEvent(QMouseEvent* event)
 
     if ((event->button()==Qt::RightButton))
     {
-
-        for (i=0;i< parent->itemlist.size();i++)//delete links from other buttons to this one
+        //delete links from other buttons to this one
+        for (i=0;i< parent->itemlist.size();i++)
             if (parent->itemlist[i]!=this)
             {
                 bool x=true;
@@ -74,7 +76,6 @@ void Button::mousePressEvent(QMouseEvent* event)
        }
         //delete this button
         parent->itemrelations.remove(this);
-        //int k=parent->itemlist.lastIndexOf(this);
         parent->itemlist.removeOne(this);
         delete this ;
     }
@@ -92,7 +93,10 @@ void Button::mouseMoveEvent(QMouseEvent* event)
         int i,j;
         relatedbutton rb;
         QPoint p=parent->mapFromGlobal(QCursor::pos());
-        for ( i=0;i< parent->itemlist.size();i++)//
+
+
+        //update the positions of the lines and labels connected to this button
+        for ( i=0;i< parent->itemlist.size();i++)
             if (parent->itemlist[i]!=this)
             {
                 bool x=true;
@@ -106,6 +110,9 @@ void Button::mouseMoveEvent(QMouseEvent* event)
                     rb.label->setGeometry(rb.line->center().x(),rb.line->center().y() ,30,30);
                 }
             }
+
+
+        //update the positions of the lines and labels connecting this button to others
         for( i=0;(i<parent->itemrelations[this].size());i++)
         {
             rb=parent->itemrelations[this][i];
@@ -113,13 +120,14 @@ void Button::mouseMoveEvent(QMouseEvent* event)
             rb.label->setGeometry(rb.line->center().x(),rb.line->center().y() ,30,30);
         }
 
+
+        //update this button's position
         setGeometry(p.x()-25, p.y()-25,50,50);
         moveevent=true;
         update();
 
     }
 
-   //
 }
 
 
@@ -131,15 +139,18 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
     if ((event->button()==Qt::LeftButton)&&(moveevent==false))
     {
         if (parent->getchecked()==false)
-        {//checking clicked button
+        {
+            //check the clicked button
             nextCheckState();
             parent->setcheckeditem(this);
             parent->setifchecked(true);
         }
         else
-        {//create a link ,add link to containers and uncheck buttons
-            if (parent->getcheckeditem()==this)//uncheck if already checked
+        {
+            //create a link ,add link to containers and uncheck buttons
+            if (parent->getcheckeditem()==this)
             {
+                //uncheck if already checked
                 this->setChecked(false);
                 parent->setifchecked(false);
                 parent->setcheckeditem(NULL);
@@ -167,7 +178,7 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                 //wait for the user input
                 connect(lineed,SIGNAL(textEdited(QString)),label,SLOT(setText(QString)) );
                 QEventLoop loop;
-                QObject::connect(lineed, SIGNAL(returnPressed()), &loop, SLOT(quit()));//wait for the user input
+                QObject::connect(lineed, SIGNAL(returnPressed()), &loop, SLOT(quit()));
                 loop.exec();
 
 
