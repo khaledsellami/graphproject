@@ -5,33 +5,33 @@
 QLine MinimumSideDistance(int x1,int y1,int x2,int y2)
 {
     //function to be used later: it determines the minimum distance line connecting between the sides of the buttons
-   QLine line;
-   int x,y,i,j,xs,ys;
-   float min=10000;
+    QLine line;
+    int x,y,i,j,xs,ys;
+    float min=10000;
 
-   for(i=0;i<2;i++)
-       for(j=0;j<2;j++)
-       {
-           x=x1+30+i*30-j*30;
-           y=y1+55-j*30-i*30;
+    for(i=0;i<2;i++)
+        for(j=0;j<2;j++)
+        {
+            x=x1+30+i*30-j*30;
+            y=y1+55-j*30-i*30;
 
-           for(int k=0;k<2;k++)
-               for(int l=0;l<2;l++)
-               {
-                   xs=x2+30+k*30-l*30;
-                   ys=y2+55-k*30-l*30;
-                   if(min>sqrt(pow(xs-x,2)+pow(ys-y,2)))
-                   {
-                       min=sqrt(pow(xs-x,2)+pow(ys-y,2));
-                       line.setLine(x-5,y,xs-5,ys);
+            for(int k=0;k<2;k++)
+                for(int l=0;l<2;l++)
+                {
+                    xs=x2+30+k*30-l*30;
+                    ys=y2+55-k*30-l*30;
+                    if(min>sqrt(pow(xs-x,2)+pow(ys-y,2)))
+                    {
+                        min=sqrt(pow(xs-x,2)+pow(ys-y,2));
+                        line.setLine(x-5,y,xs-5,ys);
 
-                   }
-               }
+                    }
+                }
 
 
-       }
+        }
 
-   return line ;
+    return line ;
 }
 
 
@@ -73,7 +73,7 @@ void Button::mousePressEvent(QMouseEvent* event)
         {
             delete v[i].label;
             delete v[i].line;
-       }
+        }
         //delete this button
         parent->itemrelations.remove(this);
         parent->itemlist.removeOne(this);
@@ -144,6 +144,12 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
             nextCheckState();
             parent->setcheckeditem(this);
             parent->setifchecked(true);
+            if (parent->algo!=none)
+            {
+                //check the source button
+                parent->pathpair[0]=this;
+                parent->l->setText("Solution with Djikstra's algorithm :\n  choose the destination vertex");
+            }
         }
         else
         {
@@ -155,61 +161,71 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                 parent->setifchecked(false);
                 parent->setcheckeditem(NULL);
             }
-            else
-            {
-                bool t=true;
-                QVector<relatedbutton> v1=parent->itemrelations[parent->getcheckeditem()];
-                for( int j=0;j<v1.size()&&t;j++)
-                    t=v1[j].item!=this;
-                if(t)
-                {//create line and determine positions
-                 QLine* line=new QLine;
-                 *line=MinimumSideDistance(parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),x(),y());
-
-                //create label and temporary lineEdit
-                this->setChecked(true);
-                QLabel* label =new QLabel(parent);
-                QLineEdit* lineed =new QLineEdit(parent) ;
-                lineed->setGeometry(line->center().x(),line->center().y() ,30,30);
-                lineed->setFocus();
-                lineed->show();
-
-
-                //wait for the user input
-                connect(lineed,SIGNAL(textEdited(QString)),label,SLOT(setText(QString)) );
-                QEventLoop loop;
-                QObject::connect(lineed, SIGNAL(returnPressed()), &loop, SLOT(quit()));
-                loop.exec();
-
-
-                //delete lineEdit and show label instead
-                delete lineed ;
-                label->setGeometry(line->center().x() ,line->center().y(),30,30);
-                label->show();
-
-
-                //update data containers
-                relatedbutton rb;
-                rb.item=this;
-                rb.label=label;
-                rb.line=line;
-                parent->itemrelations[parent->getcheckeditem()].append(rb);
+            else {
+                if (parent->algo!=none)
+                {
+                    //check the destination button
+                    parent->pathpair[1]=this;
+                    parent->loop.exit();
+                    parent->getcheckeditem()->setChecked(false);
+                    parent->setcheckeditem(NULL);
+                    parent->setifchecked(false);
                 }
+                else
+                {
+                    bool t=true;
+                    QVector<relatedbutton> v1=parent->itemrelations[parent->getcheckeditem()];
+                    for( int j=0;j<v1.size()&&t;j++)
+                        t=v1[j].item!=this;
+                    if(t)
+                    {//create line and determine positions
+                        QLine* line=new QLine;
+                        *line=MinimumSideDistance(parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),x(),y());
+
+                        //create label and temporary lineEdit
+                        this->setChecked(true);
+                        QLabel* label =new QLabel(parent);
+                        QLineEdit* lineed =new QLineEdit(parent) ;
+                        lineed->setGeometry(line->center().x(),line->center().y() ,30,30);
+                        lineed->setFocus();
+                        lineed->show();
 
 
-                //reset checked states to default
-                this->setChecked(false);
-                parent->getcheckeditem()->setChecked(false);
-                parent->setcheckeditem(NULL);
-                parent->setifchecked(false);
-                return;
-            }
+                        //wait for the user input
+                        connect(lineed,SIGNAL(textEdited(QString)),label,SLOT(setText(QString)) );
+                        QEventLoop loop;
+                        QObject::connect(lineed, SIGNAL(returnPressed()), &loop, SLOT(quit()));
+                        loop.exec();
+
+
+                        //delete lineEdit and show label instead
+                        delete lineed ;
+                        label->setGeometry(line->center().x() ,line->center().y(),30,30);
+                        label->show();
+
+
+                        //update data containers
+                        relatedbutton rb;
+                        rb.item=this;
+                        rb.label=label;
+                        rb.line=line;
+                        parent->itemrelations[parent->getcheckeditem()].append(rb);
+                    }
+
+
+                    //reset checked states to default
+                    this->setChecked(false);
+                    parent->getcheckeditem()->setChecked(false);
+                    parent->setcheckeditem(NULL);
+                    parent->setifchecked(false);
+                    return;
+                }}
 
 
         }
     }
 
- moveevent=false;
+    moveevent=false;
 }
 
 

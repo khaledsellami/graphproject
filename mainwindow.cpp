@@ -4,6 +4,7 @@
 #include<cstdlib>
 #include <QPaintEvent>
 #include<QPen>
+#include<vector>
 
 
 
@@ -173,7 +174,62 @@ void mainwindow::paintEvent(QPaintEvent*  )
         painter->end();
  }
 
+void mainwindow::SD()
+{
+    typedef float Weight;
+    typedef boost::property<boost::edge_weight_t, Weight> WeightProperty;
+    typedef boost::property<boost::vertex_name_t, std::string> NameProperty;
+    typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,NameProperty, WeightProperty > Graph;
+    typedef boost::graph_traits < Graph >::vertex_descriptor Vertex;
+    typedef boost::property_map < Graph, boost::vertex_index_t >::type IndexMap;
+    //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
+    typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
+    typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
+    QMap<Button*,Vertex> boostitemlist;
+    l->setText("Solution with Djikstra's algorithm :");
+    algo=dijkstra;
+    pathpair=new Button*[2];
+    Graph g;
+    bool negativeweight=false;
+    for(int i=0;(i<itemlist.size());i++)
+    {
+        Vertex v =boost::add_vertex(itemlist[i]->text().toStdString(),g);
+        boostitemlist[itemlist[i]]=v;
+    }
+    for(int i=0;((i<itemlist.size())&&(negativeweight==false));i++)
+    {
+        for(int k=0;(k<itemrelations[itemlist[i]].size())&&(negativeweight==false);k++)
+        {
+            bool* ok=new bool;
+            Weight j=itemrelations[itemlist[i]][k].label->text().toFloat(ok);
+            if (j<0)
+                negativeweight=true;
+            boost::add_edge(boostitemlist[itemlist[i]],boostitemlist[itemrelations[itemlist[i]][k].item], j, g);
+        }
+    }
+    if (negativeweight)
+        l->setText("error : this graph contains a negative weight");
+    else
+    {
+        std::vector<Vertex> predecessors(boost::num_vertices(g));
+        std::vector<Weight> distances(boost::num_vertices(g));
+        l->setText("Solution with Djikstra's algorith :m\n  choose the source vertex");
+        loop.exec();
+        IndexMap indexMap = boost::get(boost::vertex_index, g);
+        PredecessorMap predecessorMap(&predecessors[0], indexMap);
+        DistanceMap distanceMap(&distances[0], indexMap);
 
+        boost::dijkstra_shortest_paths(g,boostitemlist[pathpair[0]], boost::distance_map(distanceMap).predecessor_map(predecessorMap));
+        if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
+            l->setText("there's no path from this source to this destination");
+        else
+        {QString s="Solution with Djikstra's algorithm :\nthe minimum distance is : ";
+        s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
+        l->setText(s);}
+    }
+    algo=none;
+    delete[] pathpair;
+}
 
 
 

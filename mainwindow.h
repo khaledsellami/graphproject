@@ -1,5 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/iteration_macros.hpp>
+#include <boost/graph/properties.hpp>
+#include <boost/property_map/property_map.hpp>
 
 #include <QWidget>
 #include<QMap>
@@ -17,19 +24,21 @@ private:
     bool checked=false ;
     Button* checkeditem=NULL ;
     QPushButton* close=NULL ;
-    QLabel *l=NULL;
      QPushButton* Djikstrabutton=NULL;
 
 
 protected:
-int itemn=0;
+     int itemn=0;
+     QLabel *l=NULL;
+     Button** pathpair;
+     QMap<Button*,QVector<relatedbutton>> itemrelations ;
+     QVector<Button*> itemlist ;
+     QEventLoop loop;
+     current_algo algo=none;
 
 
 public:
 
-    QMap<Button*,QVector<relatedbutton>> itemrelations ;
-
-    QVector<Button*> itemlist ;
 
     explicit mainwindow(QWidget *parent = 0);
     void mousePressEvent(QMouseEvent *event);
@@ -38,6 +47,7 @@ public:
     Button* getcheckeditem();
     void setcheckeditem(Button*);
     void paintEvent(QPaintEvent *event  );
+    friend class Button;
 
 
 
@@ -61,10 +71,10 @@ public slots:
           }
         itemlist.clear();
         itemrelations.clear();
+        itemn=0;
          }
 
-    void SD()
-    {l->setText("Solution with Djikstra's algorithm...");};
+    void SD();
 
     void SB()
     {l->setText("Solution with Bellman's algorithm...");};
