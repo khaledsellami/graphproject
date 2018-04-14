@@ -2,28 +2,32 @@
 #include"mainwindow.h"
 #include <QPainter>
 
-QLine MinimumSideDistance(int x1,int y1,int x2,int y2)
+QLine MinimumSideDistance(int x1,int y1,int x2,int y2,int t)
 {
     //function to be used later: it determines the minimum distance line connecting between the sides of the buttons
     QLine line;
-    int x,y,i,j,xs,ys;
+    int x,y,i,j,xs,ys,h;
     float min=10000;
+    if (t==-1)
+        h=0;
+    else
+        h=5;
 
     for(i=0;i<2;i++)
         for(j=0;j<2;j++)
         {
-            x=x1+30+i*30-j*30;
-            y=y1+55-j*30-i*30;
+            x=x1+25+i*(25+h)-j*(25+h);
+            y=y1+50+h-j*(25+h)-i*(25+h);
 
             for(int k=0;k<2;k++)
                 for(int l=0;l<2;l++)
                 {
-                    xs=x2+30+k*30-l*30;
+                    xs=x2+25+k*30-l*30;
                     ys=y2+55-k*30-l*30;
                     if(min>sqrt(pow(xs-x,2)+pow(ys-y,2)))
                     {
                         min=sqrt(pow(xs-x,2)+pow(ys-y,2));
-                        line.setLine(x-5,y,xs-5,ys);
+                        line.setLine(x,y,xs,ys);
 
                     }
                 }
@@ -36,10 +40,27 @@ QLine MinimumSideDistance(int x1,int y1,int x2,int y2)
 
 
 
-
 Button::Button(QWidget* parent):QToolButton(parent)
 {
     setCheckable(true);
+}
+
+
+
+
+int Button::relationexists(Button* b)
+{
+    //determines if b has this button as a predecessor and return its position in relations table if yes
+    mainwindow* parent=(mainwindow*)parentWidget();
+    bool x=true;
+    int j;
+    QVector<relatedbutton> v1=parent->itemrelations[this];
+    for( j=0;j<v1.size()&&x;j++)
+        x=(v1[j].item!=b);
+    if (x)
+        return -1;
+    else
+        return j-1;
 }
 
 
@@ -99,14 +120,13 @@ void Button::mouseMoveEvent(QMouseEvent* event)
         for ( i=0;i< parent->itemlist.size();i++)
             if (parent->itemlist[i]!=this)
             {
-                bool x=true;
-                QVector<relatedbutton> v1=parent->itemrelations[parent->itemlist[i]];
-                for( j=0;j<v1.size()&&x;j++)
-                    x=v1[j].item!=this;
-                if (!x)
+                j=parent->itemlist[i]->relationexists(this);
+
+                if (j!=-1)
                 {
-                    rb=parent->itemrelations[parent->itemlist[i]][j-1];
-                    *(rb.line)=MinimumSideDistance(parent->itemlist[i]->x(),parent->itemlist[i]->y(),p.x()-25,p.y()-25);
+                    int t=this->relationexists(parent->itemlist[i]);
+                    rb=parent->itemrelations[parent->itemlist[i]][j];
+                    *(rb.line)=MinimumSideDistance(parent->itemlist[i]->x(),parent->itemlist[i]->y(),p.x()-25,p.y()-25,t);
                     rb.label->setGeometry(rb.line->center().x(),rb.line->center().y() ,30,30);
                 }
             }
@@ -116,8 +136,11 @@ void Button::mouseMoveEvent(QMouseEvent* event)
         for( i=0;(i<parent->itemrelations[this].size());i++)
         {
             rb=parent->itemrelations[this][i];
-            *(rb.line)=MinimumSideDistance(rb.item->x(),rb.item->y(),p.x()-25,p.y()-25);
-            rb.label->setGeometry(rb.line->center().x(),rb.line->center().y() ,30,30);
+            int t=rb.item->relationexists(this),h=0;
+            if (t!=-1)
+                h=20;
+            *(rb.line)=MinimumSideDistance(p.x()-25,p.y()-25,rb.item->x(),rb.item->y(),t);
+            rb.label->setGeometry(rb.line->center().x()-h,rb.line->center().y()-h,30,30);
         }
 
 
@@ -173,20 +196,25 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                 }
                 else
                 {
-                    bool t=true;
-                    QVector<relatedbutton> v1=parent->itemrelations[parent->getcheckeditem()];
-                    for( int j=0;j<v1.size()&&t;j++)
-                        t=v1[j].item!=this;
-                    if(t)
-                    {//create line and determine positions
+                    int j=parent->getcheckeditem()->relationexists(this);
+                    if(j==-1)
+                    {
+                        //create line and determine positions
                         QLine* line=new QLine;
-                        *line=MinimumSideDistance(parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),x(),y());
+                        int t=this->relationexists(parent->getcheckeditem()),h=0;
+                        if(t!=-1)
+                        {
+                            *(parent->itemrelations[this][t].line)=MinimumSideDistance(x(),y(),parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),t);
+                            h=20;
+                        }
+                        *line=MinimumSideDistance(parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),x(),y(),t);
+                        //line->setP2(removelinetip(this,line->p2()));
 
                         //create label and temporary lineEdit
                         this->setChecked(true);
                         QLabel* label =new QLabel(parent);
                         QLineEdit* lineed =new QLineEdit(parent) ;
-                        lineed->setGeometry(line->center().x(),line->center().y() ,30,30);
+                        lineed->setGeometry(line->center().x()-h,line->center().y()-h ,30,30);
                         lineed->setFocus();
                         lineed->show();
 
@@ -200,7 +228,7 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
 
                         //delete lineEdit and show label instead
                         delete lineed ;
-                        label->setGeometry(line->center().x() ,line->center().y(),30,30);
+                        label->setGeometry(line->center().x()-h ,line->center().y()-h,30,30);
                         label->show();
 
 
@@ -219,9 +247,8 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                     parent->setcheckeditem(NULL);
                     parent->setifchecked(false);
                     return;
-                }}
-
-
+                }
+            }
         }
     }
 

@@ -23,10 +23,10 @@ mainwindow::mainwindow(QWidget *parent) : QWidget(parent)
     //create current algorithm name
     l =new QLabel("->Graph Solver<-",this);
     l->show();
-    l->setGeometry(640,0,165,35);
+    l->setGeometry(640,0,300,35);
 
     //create dikstra button
-    Djikstrabutton = new QPushButton("Solve with Djikstra" ,this);
+    QPushButton* Djikstrabutton=new QPushButton("Solve with Djikstra" ,this);
     Djikstrabutton->setGeometry(10,20,100,30);
     connect(Djikstrabutton,SIGNAL(clicked()),this,SLOT(SD()));
 
@@ -92,87 +92,92 @@ void mainwindow::mousePressEvent(QMouseEvent *event)
 }
 
 void mainwindow::paintEvent(QPaintEvent*  )
- {
-     QPainter *painter = new QPainter(this);
-     QPen linepen(Qt::darkGray);
-     linepen.setWidth(1);
-     QPoint p1,p2,p3,p4;
+{
+    QPainter *painter = new QPainter(this);
+    QPen linepen(Qt::darkGray);
+    linepen.setWidth(1);
+    QPoint p1,p2,p3,p4;
 
 
-     linepen.setStyle( Qt::SolidLine );
-     painter->setPen(linepen);
-     for(int i=0;i<itemlist.size();i++)
+    linepen.setStyle( Qt::SolidLine );
+    painter->setPen(linepen);
+    for(int i=0;i<itemlist.size();i++)
 
-     {
-         for(int j=0;j<itemrelations[itemlist[i]].size();j++)
+    {
+        for(int j=0;j<itemrelations[itemlist[i]].size();j++)
 
-         {
-             //draw the line
-             painter->drawLine(* (itemrelations[itemlist[i]][j].line));
+        {
+            //draw the line
+            painter->drawLine(* (itemrelations[itemlist[i]][j].line));
 
-             //draw arrow
+            //draw arrow
 
-             //Arrowhead left
-             if(itemrelations[itemlist[i]][j].line->x2()<itemrelations[itemlist[i]][j].item->x() )
+            //Arrowhead left
+            if(itemrelations[itemlist[i]][j].line->x2()==itemrelations[itemlist[i]][j].item->x()-5)
 
-             { p1.setX(itemrelations[itemlist[i]][j].item->x());
-             p1.setY(itemrelations[itemlist[i]][j].item->y()+25);
+            { p1.setX(itemrelations[itemlist[i]][j].item->x());
+                p1.setY(itemrelations[itemlist[i]][j].item->y()+25);
 
-             p2.setX(p1.x()-5); p2.setY(p1.y()-5);
-             p3.setX(p1.x()-5); p3.setY(p1.y()+5);
-             painter->drawLine(p2,p1);
-             painter->drawLine(p1,p3);
-             painter->drawLine(p2,p3); }
+                p2.setX(p1.x()-5); p2.setY(p1.y()-5);
+                p3.setX(p1.x()-5); p3.setY(p1.y()+5);
+                painter->drawLine(p2,p1);
+                painter->drawLine(p1,p3);
+                painter->drawLine(p2,p3);
+            }
 
 
-             //Arrowhead top
+            //Arrowhead top
 
-             if (itemrelations[itemlist[i]][j].line->y2()<itemrelations[itemlist[i]][j].item->y())
-             {p1.setX(itemrelations[itemlist[i]][j].item->x()+25);
-             p1.setY(itemrelations[itemlist[i]][j].item->y());
-
-             p2.setX(p1.x()-5); p2.setY(p1.y()-5);
-             p3.setX(p1.x()+5); p3.setY(p1.y()-5);
-             painter->drawLine(p2,p1);
-             painter->drawLine(p1,p3);
-             painter->drawLine(p2,p3);}
-
-             //Arrowhead bottom
-            if ( itemrelations[itemlist[i]][j].line->y2()>itemrelations[itemlist[i]][j].item->y()+50 &&itemrelations[itemlist[i]][j].line->x2()<itemrelations[itemlist[i]][j].item->x()+50)
-
+            if (itemrelations[itemlist[i]][j].line->y2()==itemrelations[itemlist[i]][j].item->y()-5 )
             {p1.setX(itemrelations[itemlist[i]][j].item->x()+25);
-             p1.setY(itemrelations[itemlist[i]][j].item->y()+50);
+                p1.setY(itemrelations[itemlist[i]][j].item->y());
 
-             p2.setX(p1.x()-5); p2.setY(p1.y()+5);
-             p3.setX(p1.x()+5); p3.setY(p1.y()+5);
-             painter->drawLine(p2,p1);
-             painter->drawLine(p1,p3);
-             painter->drawLine(p2,p3);}
+                p2.setX(p1.x()-5); p2.setY(p1.y()-5);
+                p3.setX(p1.x()+5); p3.setY(p1.y()-5);
+                painter->drawLine(p2,p1);
+                painter->drawLine(p1,p3);
+                painter->drawLine(p2,p3);
+            }
 
+            //Arrowhead bottom
+            if (itemrelations[itemlist[i]][j].line->y2()==itemrelations[itemlist[i]][j].item->y()+55)
 
-             //Arrowhead right
-             if (itemrelations[itemlist[i]][j].line->x1()>itemrelations[itemlist[i]][j].item->x()+50 && itemrelations[itemlist[i]][j].line->y1()<itemrelations[itemlist[i]][j].item->y()+50)
-             {p1.setX(itemrelations[itemlist[i]][j].item->x()+50);
-             p1.setY(itemrelations[itemlist[i]][j].item->y()+25);
+            {
+                p1.setX(itemrelations[itemlist[i]][j].item->x()+25);
+                p1.setY(itemrelations[itemlist[i]][j].item->y()+50);
 
-             p2.setX(p1.x()+5); p2.setY(p1.y()-5);
-             p3.setX(p1.x()+5); p3.setY(p1.y()+5);
-             painter->drawLine(p2,p1);
-             painter->drawLine(p1,p3);
-             painter->drawLine(p2,p3);}
-
-
-             update();
-
-
-         }
+                p2.setX(p1.x()-5); p2.setY(p1.y()+5);
+                p3.setX(p1.x()+5); p3.setY(p1.y()+5);
+                painter->drawLine(p2,p1);
+                painter->drawLine(p1,p3);
+                painter->drawLine(p2,p3);
+            }
 
 
-     }
+            //Arrowhead right
+            if ( itemrelations[itemlist[i]][j].line->x2()==itemrelations[itemlist[i]][j].item->x()+55)
+            {p1.setX(itemrelations[itemlist[i]][j].item->x()+50);
+                p1.setY(itemrelations[itemlist[i]][j].item->y()+25);
 
-        update();
-        painter->end();
- }
+                p2.setX(p1.x()+5); p2.setY(p1.y()-5);
+                p3.setX(p1.x()+5); p3.setY(p1.y()+5);
+                painter->drawLine(p2,p1);
+                painter->drawLine(p1,p3);
+                painter->drawLine(p2,p3);
+            }
+
+
+            update();
+
+
+        }
+
+
+    }
+
+    update();
+    painter->end();
+}
 
 void mainwindow::SD()
 {
@@ -224,8 +229,8 @@ void mainwindow::SD()
             l->setText("there's no path from this source to this destination");
         else
         {QString s="Solution with Djikstra's algorithm :\nthe minimum distance is : ";
-        s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
-        l->setText(s);}
+            s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
+            l->setText(s);}
     }
     algo=none;
     delete[] pathpair;

@@ -14,6 +14,7 @@ private:
     bool moveevent=false;
 public:
     explicit Button(QWidget *) ;
+    int relationexists(Button*);
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent*);
     void mouseReleaseEvent(QMouseEvent*);

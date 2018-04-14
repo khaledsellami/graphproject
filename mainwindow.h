@@ -24,7 +24,6 @@ private:
     bool checked=false ;
     Button* checkeditem=NULL ;
     QPushButton* close=NULL ;
-     QPushButton* Djikstrabutton=NULL;
 
 
 protected:
@@ -72,6 +71,9 @@ public slots:
         itemlist.clear();
         itemrelations.clear();
         itemn=0;
+        checked=false;
+        checkeditem=NULL;
+        l->setText("->Graph Solver<-");
          }
 
     void SD();
