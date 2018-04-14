@@ -121,7 +121,6 @@ void Button::mouseMoveEvent(QMouseEvent* event)
             if (parent->itemlist[i]!=this)
             {
                 j=parent->itemlist[i]->relationexists(this);
-
                 if (j!=-1)
                 {
                     int t=this->relationexists(parent->itemlist[i]);
@@ -130,7 +129,6 @@ void Button::mouseMoveEvent(QMouseEvent* event)
                     rb.label->setGeometry(rb.line->center().x(),rb.line->center().y() ,30,30);
                 }
             }
-
 
         //update the positions of the lines and labels connecting this button to others
         for( i=0;(i<parent->itemrelations[this].size());i++)

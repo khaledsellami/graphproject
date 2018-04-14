@@ -3,6 +3,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include<boost/graph/bellman_ford_shortest_paths.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/properties.hpp>
@@ -55,9 +56,8 @@ signals:
 public slots:
     void Resetall()
         {
-
+        //delete all buttons,lines and labels
         for(int i=0;i<itemlist.size();i++)
-
         {
             for(int j=0;j<itemrelations[itemlist[i]].size();j++)
                { delete itemrelations[itemlist[i]][j].line;
@@ -68,6 +68,7 @@ public slots:
 
 
           }
+        //empty the comtainers
         itemlist.clear();
         itemrelations.clear();
         itemn=0;
@@ -78,8 +79,7 @@ public slots:
 
     void SD();
 
-    void SB()
-    {l->setText("Solution with Bellman's algorithm...");};
+    void SB();
 
     void SF()
     {l->setText("Solution with Floyd's algorithm...");};

@@ -114,7 +114,6 @@ void mainwindow::paintEvent(QPaintEvent*  )
 
             //Arrowhead left
             if(itemrelations[itemlist[i]][j].line->x2()==itemrelations[itemlist[i]][j].item->x()-5)
-
             { p1.setX(itemrelations[itemlist[i]][j].item->x());
                 p1.setY(itemrelations[itemlist[i]][j].item->y()+25);
 
@@ -127,7 +126,6 @@ void mainwindow::paintEvent(QPaintEvent*  )
 
 
             //Arrowhead top
-
             if (itemrelations[itemlist[i]][j].line->y2()==itemrelations[itemlist[i]][j].item->y()-5 )
             {p1.setX(itemrelations[itemlist[i]][j].item->x()+25);
                 p1.setY(itemrelations[itemlist[i]][j].item->y());
@@ -139,9 +137,9 @@ void mainwindow::paintEvent(QPaintEvent*  )
                 painter->drawLine(p2,p3);
             }
 
+
             //Arrowhead bottom
             if (itemrelations[itemlist[i]][j].line->y2()==itemrelations[itemlist[i]][j].item->y()+55)
-
             {
                 p1.setX(itemrelations[itemlist[i]][j].item->x()+25);
                 p1.setY(itemrelations[itemlist[i]][j].item->y()+50);
@@ -165,14 +163,8 @@ void mainwindow::paintEvent(QPaintEvent*  )
                 painter->drawLine(p1,p3);
                 painter->drawLine(p2,p3);
             }
-
-
             update();
-
-
         }
-
-
     }
 
     update();
@@ -181,6 +173,7 @@ void mainwindow::paintEvent(QPaintEvent*  )
 
 void mainwindow::SD()
 {
+    //rename all types needed later
     typedef float Weight;
     typedef boost::property<boost::edge_weight_t, Weight> WeightProperty;
     typedef boost::property<boost::vertex_name_t, std::string> NameProperty;
@@ -190,12 +183,14 @@ void mainwindow::SD()
     //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
     typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
     typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
+    //initialise the variiables needed later
     QMap<Button*,Vertex> boostitemlist;
     l->setText("Solution with Djikstra's algorithm :");
     algo=dijkstra;
     pathpair=new Button*[2];
     Graph g;
     bool negativeweight=false;
+    //translate the graph into the boost graph variable
     for(int i=0;(i<itemlist.size());i++)
     {
         Vertex v =boost::add_vertex(itemlist[i]->text().toStdString(),g);
@@ -213,18 +208,22 @@ void mainwindow::SD()
         }
     }
     if (negativeweight)
+        //alert the user and exit the algorithm
         l->setText("error : this graph contains a negative weight");
     else
     {
         std::vector<Vertex> predecessors(boost::num_vertices(g));
         std::vector<Weight> distances(boost::num_vertices(g));
-        l->setText("Solution with Djikstra's algorith :m\n  choose the source vertex");
+        l->setText("Solution with Djikstra's algorithm :\n  choose the source vertex");
+        //wait for user the pick the source and destination
         loop.exec();
+        //initialise the needed containers for the algorithm output
         IndexMap indexMap = boost::get(boost::vertex_index, g);
         PredecessorMap predecessorMap(&predecessors[0], indexMap);
         DistanceMap distanceMap(&distances[0], indexMap);
-
+        //call dijkstra's algorithm function
         boost::dijkstra_shortest_paths(g,boostitemlist[pathpair[0]], boost::distance_map(distanceMap).predecessor_map(predecessorMap));
+        //show the shortest path if it exists
         if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
             l->setText("there's no path from this source to this destination");
         else
@@ -238,7 +237,72 @@ void mainwindow::SD()
 
 
 
+void mainwindow::SB()
+{
+    //rename all types needed later
+    typedef float Weight;
+    typedef boost::property<boost::edge_weight_t, Weight> WeightProperty;
+    typedef boost::property<boost::vertex_name_t, std::string> NameProperty;
+    typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,NameProperty, WeightProperty > Graph;
+    typedef boost::graph_traits < Graph >::vertex_descriptor Vertex;
+    typedef boost::property_map < Graph, boost::vertex_index_t >::type IndexMap;
+    //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
+    typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
+    typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
+    //initialise the variiables needed later
+    QMap<Button*,Vertex> boostitemlist;
+    l->setText("Solution with Bellman's algorithm...");
+    algo=bellman;
+    pathpair=new Button*[2];
+    Graph g;
+    //translate the graph into the boost graph variable
+    for(int i=0;(i<itemlist.size());i++)
+    {
+        Vertex v =boost::add_vertex(itemlist[i]->text().toStdString(),g);
+        boostitemlist[itemlist[i]]=v;
+    }
+    for(int i=0;(i<itemlist.size());i++)
+    {
+        for(int k=0;k<itemrelations[itemlist[i]].size();k++)
+        {
+            bool* ok=new bool;
+            Weight j=itemrelations[itemlist[i]][k].label->text().toFloat(ok);
+            boost::add_edge(boostitemlist[itemlist[i]],boostitemlist[itemrelations[itemlist[i]][k].item], j, g);
+        }
+    }
+    std::vector<Vertex> predecessors(boost::num_vertices(g));
+    std::vector<Weight> distances(boost::num_vertices(g));
+    l->setText("Solution with Bellman's algorithm :\n  choose the source vertex");
+    //wait for user the pick the source and destination
+    loop.exec();
+    //initialise the needed containers for the algorithm output
+    IndexMap indexMap = boost::get(boost::vertex_index, g);
+    PredecessorMap predecessorMap(&predecessors[0], indexMap);
+    DistanceMap distanceMap(&distances[0], indexMap);
+    boost::property_map<Graph, boost::edge_weight_t>::type weights = get(boost::edge_weight_t(), g);
+    //call bellman's algorithm function
+    bool r = boost::bellman_ford_shortest_paths(g,num_vertices(g), boost::weight_map(weights).distance_map(distanceMap).predecessor_map(predecessorMap).root_vertex(boostitemlist[pathpair[0]]));
+    //show the shortest path if it exists
+    if (r)
+    {
+        if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
+            l->setText("there's no path from this source to this destination");
+        else
+        {
+            QString s="Solution with Bellman's algorithm :\nthe minimum distance is : ";
+            s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
+            l->setText(s);
+        }
+    }
+    else
+        l->setText("error : there's a negative cycle");
 
+
+
+
+    algo=none;
+    delete[] pathpair;
+}
 
 
 
