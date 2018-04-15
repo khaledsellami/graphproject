@@ -26,7 +26,7 @@ mainwindow::mainwindow(QWidget *parent) : QWidget(parent)
     l->setGeometry(640,0,300,35);
 
     //create dikstra button
-    QPushButton* Djikstrabutton=new QPushButton("Solve with Djikstra" ,this);
+    QPushButton* Djikstrabutton=new QPushButton("Solve with Dijkstra" ,this);
     Djikstrabutton->setGeometry(10,20,100,30);
     connect(Djikstrabutton,SIGNAL(clicked()),this,SLOT(SD()));
 
@@ -36,9 +36,9 @@ mainwindow::mainwindow(QWidget *parent) : QWidget(parent)
     connect(Bellmanbutton,SIGNAL(clicked()),this,SLOT(SB()));
 
     //create floyd button
-    QPushButton *Floydbutton =new QPushButton("Solve with Floyd",this);
-    Floydbutton->setGeometry(10,120,100,30);
-    connect(Floydbutton,SIGNAL(clicked()),this,SLOT(SF()));
+    QPushButton *dagbutton =new QPushButton("Solve with DAG",this);
+    dagbutton->setGeometry(10,120,100,30);
+    connect(dagbutton,SIGNAL(clicked()),this,SLOT(SDAG()));
 
     //create reset button
     QPushButton *Resetbutton =new QPushButton("Reset all",this);
@@ -185,7 +185,7 @@ void mainwindow::SD()
     typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
     //initialise the variiables needed later
     QMap<Button*,Vertex> boostitemlist;
-    l->setText("Solution with Djikstra's algorithm :");
+    l->setText("Solution with Dijkstra's algorithm :");
     algo=dijkstra;
     pathpair=new Button*[2];
     Graph g;
@@ -214,7 +214,7 @@ void mainwindow::SD()
     {
         std::vector<Vertex> predecessors(boost::num_vertices(g));
         std::vector<Weight> distances(boost::num_vertices(g));
-        l->setText("Solution with Djikstra's algorithm :\n  choose the source vertex");
+        l->setText("Solution with Dijkstra's algorithm :\n  choose the source vertex");
         //wait for user the pick the source and destination
         loop.exec();
         //initialise the needed containers for the algorithm output
@@ -227,15 +227,13 @@ void mainwindow::SD()
         if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
             l->setText("there's no path from this source to this destination");
         else
-        {QString s="Solution with Djikstra's algorithm :\nthe minimum distance is : ";
+        {QString s="Solution with Dijkstra's algorithm :\nthe minimum distance is : ";
             s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
             l->setText(s);}
     }
     algo=none;
     delete[] pathpair;
 }
-
-
 
 void mainwindow::SB()
 {
@@ -304,7 +302,71 @@ void mainwindow::SB()
     delete[] pathpair;
 }
 
-
+void mainwindow::SDAG()
+{
+    //rename all types needed later
+    typedef float Weight;
+    typedef boost::property<boost::edge_weight_t, Weight> WeightProperty;
+    typedef boost::property<boost::vertex_name_t, std::string> NameProperty;
+    typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,NameProperty, WeightProperty > Graph;
+    typedef boost::graph_traits < Graph >::vertex_descriptor Vertex;
+    typedef boost::property_map < Graph, boost::vertex_index_t >::type IndexMap;
+    //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
+    typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
+    typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
+    //initialise the variiables needed later
+    QMap<Button*,Vertex> boostitemlist;
+    l->setText("Solution with DAG's algorithm :");
+    algo=DAG;
+    pathpair=new Button*[2];
+    Graph g;
+    bool notdirected=false;
+    //translate the graph into the boost graph variable
+    for(int i=0;(i<itemlist.size());i++)
+    {
+        Vertex v =boost::add_vertex(itemlist[i]->text().toStdString(),g);
+        boostitemlist[itemlist[i]]=v;
+    }
+    for(int i=0;((i<itemlist.size())&&(notdirected==false));i++)
+    {
+        for(int k=0;(k<itemrelations[itemlist[i]].size())&&(notdirected==false);k++)
+        {
+            bool* ok=new bool;
+            Weight j=itemrelations[itemlist[i]][k].label->text().toFloat(ok);
+            int t=itemrelations[itemlist[i]][k].item->relationexists(itemlist[i]);
+            if (t!=-1)
+                notdirected=true;
+            boost::add_edge(boostitemlist[itemlist[i]],boostitemlist[itemrelations[itemlist[i]][k].item], j, g);
+        }
+    }
+    if (notdirected)
+        l->setText("error : this graph isn't directed");
+    else
+    {
+        std::vector<Vertex> predecessors(boost::num_vertices(g));
+        std::vector<Weight> distances(boost::num_vertices(g));
+        l->setText("Solution with DAG's algorithm :\n  choose the source vertex");
+        //wait for user the pick the source and destination
+        loop.exec();
+        //initialise the needed containers for the algorithm output
+        IndexMap indexMap = boost::get(boost::vertex_index, g);
+        PredecessorMap predecessorMap(&predecessors[0], indexMap);
+        DistanceMap distanceMap(&distances[0], indexMap);
+        //call DAG's algorithm function
+        boost::dag_shortest_paths(g,boostitemlist[pathpair[0]], boost::distance_map(distanceMap).predecessor_map(predecessorMap));
+        //show the shortest path if it exists
+        if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
+            l->setText("there's no path from this source to this destination");
+        else
+        {
+            QString s="Solution with DAG's algorithm :\nthe minimum distance is : ";
+            s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
+            l->setText(s);
+        }
+    }
+    algo=none;
+    delete[] pathpair;
+}
 
 
 

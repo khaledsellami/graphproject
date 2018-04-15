@@ -6,7 +6,7 @@
 #include<QLabel>
 #include<QEventLoop>
 
- enum current_algo {none,dijkstra,bellman};
+enum current_algo {none,dijkstra,bellman,DAG};
 
 class Button : public QToolButton
 {

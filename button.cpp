@@ -169,7 +169,17 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
             {
                 //check the source button
                 parent->pathpair[0]=this;
-                parent->l->setText("Solution with Djikstra's algorithm :\n  choose the destination vertex");
+                QString s;
+                if (parent->algo==dijkstra)
+                    s="Dijkstra";
+                else
+                {
+                    if (parent->algo==bellman)
+                        s="Bellman";
+                    else
+                        s="DAG";
+                }
+                parent->l->setText("Solution with "+s+"'s algorithm :\n  choose the destination vertex");
             }
         }
         else
@@ -206,7 +216,6 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                             h=20;
                         }
                         *line=MinimumSideDistance(parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),x(),y(),t);
-                        //line->setP2(removelinetip(this,line->p2()));
 
                         //create label and temporary lineEdit
                         this->setChecked(true);

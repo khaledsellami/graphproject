@@ -4,6 +4,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include<boost/graph/bellman_ford_shortest_paths.hpp>
+#include<boost/graph/dag_shortest_paths.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/properties.hpp>
@@ -81,8 +82,7 @@ public slots:
 
     void SB();
 
-    void SF()
-    {l->setText("Solution with Floyd's algorithm...");};
+    void SDAG();
 
 
 
