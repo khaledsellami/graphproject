@@ -1,3 +1,7 @@
+  //-----------------------------------------//
+ //work of Khaled Sellami and Ilyes Yahyaoui//
+//-----------------------------------------//
+
 #ifndef BUTTON_H
 #define BUTTON_H
 #include<QToolButton>
@@ -27,6 +31,7 @@ struct relatedbutton
     Button* item;
     QLabel* label;
     QLine* line;
+    int color=0;
 };
 
 #endif // BUTTON_H

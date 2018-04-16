@@ -1,3 +1,7 @@
+  //-----------------------------------------//
+ //work of Khaled Sellami and Ilyes Yahyaoui//
+//-----------------------------------------//
+
 #include "button.h"
 #include"mainwindow.h"
 #include <QPainter>
@@ -169,6 +173,7 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
             {
                 //check the source button
                 parent->pathpair[0]=this;
+                parent->pathpair[0]->setStyleSheet("Background: #b30000");
                 QString s;
                 if (parent->algo==dijkstra)
                     s="Dijkstra";
@@ -191,12 +196,29 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                 this->setChecked(false);
                 parent->setifchecked(false);
                 parent->setcheckeditem(NULL);
+                if (parent->algo!=none)
+                {
+                    //uncheck the source button
+                    parent->pathpair[0]->setStyleSheet("");
+                    QString s;
+                    if (parent->algo==dijkstra)
+                        s="Dijkstra";
+                    else
+                    {
+                        if (parent->algo==bellman)
+                            s="Bellman";
+                        else
+                            s="DAG";
+                    }
+                    parent->l->setText("Solution with "+s+"'s algorithm :\n  choose the source vertex");
+                }
             }
             else {
                 if (parent->algo!=none)
                 {
                     //check the destination button
                     parent->pathpair[1]=this;
+                    parent->pathpair[1]->setStyleSheet("Background: #b30000");
                     parent->loop.exit();
                     parent->getcheckeditem()->setChecked(false);
                     parent->setcheckeditem(NULL);
@@ -216,25 +238,37 @@ void Button::mouseReleaseEvent(QMouseEvent* event)
                             h=20;
                         }
                         *line=MinimumSideDistance(parent->getcheckeditem()->x(),parent->getcheckeditem()->y(),x(),y(),t);
-
                         //create label and temporary lineEdit
                         this->setChecked(true);
+                        bool* ok=new bool(false);
                         QLabel* label =new QLabel(parent);
                         QLineEdit* lineed =new QLineEdit(parent) ;
-                        lineed->setGeometry(line->center().x()-h,line->center().y()-h ,30,30);
-                        lineed->setFocus();
-                        lineed->show();
+                        while((*ok)==false)
+                        {
+                            *ok=true;
+                            lineed->setGeometry(line->center().x()-h,line->center().y()-h ,30,30);
+                            lineed->setFocus();
+                            lineed->grabMouse();
+                            lineed->show();
 
 
-                        //wait for the user input
-                        connect(lineed,SIGNAL(textEdited(QString)),label,SLOT(setText(QString)) );
-                        QEventLoop loop;
-                        QObject::connect(lineed, SIGNAL(returnPressed()), &loop, SLOT(quit()));
-                        loop.exec();
-
+                            //wait for the user input
+                            connect(lineed,SIGNAL(textEdited(QString)),label,SLOT(setText(QString)) );
+                            QEventLoop loop;
+                            QObject::connect(lineed, SIGNAL(returnPressed()), &loop, SLOT(quit()));
+                            loop.exec();
+                            lineed->text().toFloat(ok);
+                            if(*ok==false)
+                            {
+                                parent->l->setText("ERROR : write a float");
+                                parent->l->setStyleSheet("color: red");
+                            }
+                        }
 
                         //delete lineEdit and show label instead
                         delete lineed ;
+                        parent->l->setText("->Graph Solver<-");
+                        parent->l->setStyleSheet("");
                         label->setGeometry(line->center().x()-h ,line->center().y()-h,30,30);
                         label->show();
 

@@ -13,3 +13,6 @@ SOURCES += main.cpp \
 HEADERS += \
     mainwindow.h \
     button.h
+
+RESOURCES += \
+    graphprojectresource.qrc

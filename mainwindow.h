@@ -1,3 +1,7 @@
+  //-----------------------------------------//
+ //work of Khaled Sellami and Ilyes Yahyaoui//
+//-----------------------------------------//
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include <boost/config.hpp>
@@ -55,28 +59,9 @@ public:
 signals:
 
 public slots:
-    void Resetall()
-        {
-        //delete all buttons,lines and labels
-        for(int i=0;i<itemlist.size();i++)
-        {
-            for(int j=0;j<itemrelations[itemlist[i]].size();j++)
-               { delete itemrelations[itemlist[i]][j].line;
-                 delete itemrelations[itemlist[i]][j].label;
-            }
-            itemrelations[itemlist[i]].clear();
-            delete itemlist[i] ;
+    void Deleteall();
 
-
-          }
-        //empty the comtainers
-        itemlist.clear();
-        itemrelations.clear();
-        itemn=0;
-        checked=false;
-        checkeditem=NULL;
-        l->setText("->Graph Solver<-");
-         }
+    void Reset();
 
     void SD();
 

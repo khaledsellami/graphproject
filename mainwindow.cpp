@@ -1,3 +1,7 @@
+  //-----------------------------------------//
+ //work of Khaled Sellami and Ilyes Yahyaoui//
+//-----------------------------------------//
+
 #include "mainwindow.h"
 #include<cmath>
 #include<QMouseEvent>
@@ -7,9 +11,12 @@
 #include<vector>
 
 
-
 mainwindow::mainwindow(QWidget *parent) : QWidget(parent)
 {
+    //set the window title and icon
+    setWindowTitle("Graph Project ");
+    setWindowIcon(QIcon(":/icon/graphicon.png"));
+
     //set window size
     setFixedSize(1280, 680);
     setUpdatesEnabled(true);
@@ -25,25 +32,30 @@ mainwindow::mainwindow(QWidget *parent) : QWidget(parent)
     l->show();
     l->setGeometry(640,0,300,35);
 
-    //create dikstra button
-    QPushButton* Djikstrabutton=new QPushButton("Solve with Dijkstra" ,this);
-    Djikstrabutton->setGeometry(10,20,100,30);
-    connect(Djikstrabutton,SIGNAL(clicked()),this,SLOT(SD()));
+    //create dijkstra button
+    QPushButton* Dijkstrabutton=new QPushButton("Solve with Dijkstra" ,this);
+    Dijkstrabutton->setGeometry(10,20,100,30);
+    connect(Dijkstrabutton,SIGNAL(clicked()),this,SLOT(SD()));
 
     //create bellman button
     QPushButton *Bellmanbutton=new QPushButton("Solve with Bellman",this);
     Bellmanbutton->setGeometry(10,70,100,30);
     connect(Bellmanbutton,SIGNAL(clicked()),this,SLOT(SB()));
 
-    //create floyd button
+    //create dag button
     QPushButton *dagbutton =new QPushButton("Solve with DAG",this);
     dagbutton->setGeometry(10,120,100,30);
     connect(dagbutton,SIGNAL(clicked()),this,SLOT(SDAG()));
 
+    //create delete button
+    QPushButton *deletebutton =new QPushButton("Delete all",this);
+    deletebutton->setGeometry(10,600,100,30);
+    connect(deletebutton,SIGNAL(clicked()),this,SLOT(Deleteall()));
+
     //create reset button
-    QPushButton *Resetbutton =new QPushButton("Reset all",this);
-    Resetbutton->setGeometry(10,600,100,30);
-    connect(Resetbutton,SIGNAL(clicked()),this,SLOT(Resetall()));
+    QPushButton *Resetbutton =new QPushButton("Reset",this);
+    Resetbutton->setGeometry(10,560,100,30);
+    connect(Resetbutton,SIGNAL(clicked()),this,SLOT(Reset()));
 }
 
 bool mainwindow::getchecked()
@@ -96,7 +108,7 @@ void mainwindow::paintEvent(QPaintEvent*  )
     QPainter *painter = new QPainter(this);
     QPen linepen(Qt::darkGray);
     linepen.setWidth(1);
-    QPoint p1,p2,p3,p4;
+    QPoint p1,p2,p3;
 
 
     linepen.setStyle( Qt::SolidLine );
@@ -107,6 +119,33 @@ void mainwindow::paintEvent(QPaintEvent*  )
         for(int j=0;j<itemrelations[itemlist[i]].size();j++)
 
         {
+            //choose color for each line
+            linepen.setColor(Qt::darkGray);linepen.setWidth(1); painter->setPen(linepen);
+            if(itemrelations[itemlist[i]][j].color==1)
+            {
+                linepen.setColor(Qt::darkGreen);
+                linepen.setWidth(2);
+                painter->setPen(linepen);
+            }
+            else
+            {
+                if(itemrelations[itemlist[i]][j].color==2)
+                {
+                    linepen.setColor(Qt::darkBlue);
+                    linepen.setWidth(2);
+                    painter->setPen(linepen);
+                }
+                else
+                {
+                    if (itemrelations[itemlist[i]][j].color==3)
+                    {
+                        linepen.setColor(Qt::darkYellow);
+                        linepen.setWidth(2);
+                        painter->setPen(linepen);
+                    }
+                }
+            }
+
             //draw the line
             painter->drawLine(* (itemrelations[itemlist[i]][j].line));
 
@@ -180,12 +219,12 @@ void mainwindow::SD()
     typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,NameProperty, WeightProperty > Graph;
     typedef boost::graph_traits < Graph >::vertex_descriptor Vertex;
     typedef boost::property_map < Graph, boost::vertex_index_t >::type IndexMap;
-    //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
     typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
     typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
     //initialise the variiables needed later
     QMap<Button*,Vertex> boostitemlist;
     l->setText("Solution with Dijkstra's algorithm :");
+    l->setStyleSheet("color:#009900");
     algo=dijkstra;
     pathpair=new Button*[2];
     Graph g;
@@ -208,8 +247,11 @@ void mainwindow::SD()
         }
     }
     if (negativeweight)
+    {
         //alert the user and exit the algorithm
-        l->setText("error : this graph contains a negative weight");
+        l->setText("ERROR : this graph contains a negative weight");
+        l->setStyleSheet("color:red");
+    }
     else
     {
         std::vector<Vertex> predecessors(boost::num_vertices(g));
@@ -225,12 +267,35 @@ void mainwindow::SD()
         boost::dijkstra_shortest_paths(g,boostitemlist[pathpair[0]], boost::distance_map(distanceMap).predecessor_map(predecessorMap));
         //show the shortest path if it exists
         if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
+        {
             l->setText("there's no path from this source to this destination");
+            l->setStyleSheet("color:red");
+        }
         else
-        {QString s="Solution with Dijkstra's algorithm :\nthe minimum distance is : ";
+        {
+            QString s="Solution with Dijkstra's algorithm :\nthe minimum distance is : ";
             s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
-            l->setText(s);}
+            l->setText(s);
+
+            //highlighting path items
+            int goalkey=boostitemlist[pathpair[1]]; //The key of the goal
+            int sourcekey=boostitemlist[pathpair[0]]; //The key of the source
+            //color the path buttons and labels and set the lines to be colored in drawevent
+            itemlist[goalkey]->setStyleSheet("background:#009900");
+            for(int jumper=goalkey,jumperpred=0; jumper != sourcekey  ; jumper = predecessorMap[jumper])
+            {
+                jumperpred=predecessorMap[jumper];
+                Button * bj=boostitemlist.key(jumper),*bjp=boostitemlist.key(jumperpred);
+                int k= bjp->relationexists(bj);
+                itemrelations[bjp][k].color=1;
+                itemrelations[bjp][k].label->setStyleSheet("color:#009900");
+                itemlist[jumperpred]->setStyleSheet("background:#009900");
+
+            }
+
+        }
     }
+
     algo=none;
     delete[] pathpair;
 }
@@ -244,12 +309,12 @@ void mainwindow::SB()
     typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,NameProperty, WeightProperty > Graph;
     typedef boost::graph_traits < Graph >::vertex_descriptor Vertex;
     typedef boost::property_map < Graph, boost::vertex_index_t >::type IndexMap;
-    //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
     typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
     typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
     //initialise the variiables needed later
     QMap<Button*,Vertex> boostitemlist;
     l->setText("Solution with Bellman's algorithm...");
+    l->setStyleSheet("color:darkBlue");
     algo=bellman;
     pathpair=new Button*[2];
     Graph g;
@@ -284,16 +349,38 @@ void mainwindow::SB()
     if (r)
     {
         if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
+        {
             l->setText("there's no path from this source to this destination");
+            l->setStyleSheet("color: red");
+        }
         else
         {
             QString s="Solution with Bellman's algorithm :\nthe minimum distance is : ";
             s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
             l->setText(s);
+
+            //highlight path items
+            int goalkey=boostitemlist[pathpair[1]]; //The key of the goal
+            int sourcekey=boostitemlist[pathpair[0]]; //The key of the source
+            //color the path buttons and labels and set the lines to be colored in drawevent
+            itemlist[goalkey]->setStyleSheet("background:darkBlue");
+            for(int jumper=goalkey,jumperpred=0; jumper != sourcekey  ; jumper = predecessorMap[jumper])
+            {
+                jumperpred=predecessorMap[jumper];
+                Button * bj=boostitemlist.key(jumper),*bjp=boostitemlist.key(jumperpred);
+                int k= bjp->relationexists(bj);
+                itemrelations[bjp][k].color=2;
+                itemrelations[bjp][k].label->setStyleSheet("color:darkBlue");
+                itemlist[jumperpred]->setStyleSheet("background:darkBlue");
+            }
+
         }
     }
     else
-        l->setText("error : there's a negative cycle");
+    {
+        l->setText("ERROR : there's a negative cycle");
+        l->setStyleSheet("color: red");
+    }
 
 
 
@@ -311,12 +398,12 @@ void mainwindow::SDAG()
     typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,NameProperty, WeightProperty > Graph;
     typedef boost::graph_traits < Graph >::vertex_descriptor Vertex;
     typedef boost::property_map < Graph, boost::vertex_index_t >::type IndexMap;
-    //typedef boost::property_map < Graph, boost::vertex_name_t >::type NameMap;
     typedef boost::iterator_property_map < Vertex*, IndexMap, Vertex, Vertex& > PredecessorMap;
     typedef boost::iterator_property_map < Weight*, IndexMap, Weight, Weight& > DistanceMap;
-    //initialise the variiables needed later
+    //initialise the variables needed later
     QMap<Button*,Vertex> boostitemlist;
     l->setText("Solution with DAG's algorithm :");
+    l->setStyleSheet("color:#808000");
     algo=DAG;
     pathpair=new Button*[2];
     Graph g;
@@ -340,7 +427,10 @@ void mainwindow::SDAG()
         }
     }
     if (notdirected)
-        l->setText("error : this graph isn't directed");
+    {
+        l->setText("ERROR : this graph isn't directed");
+        l->setStyleSheet("color: red");
+    }
     else
     {
         std::vector<Vertex> predecessors(boost::num_vertices(g));
@@ -356,18 +446,79 @@ void mainwindow::SDAG()
         boost::dag_shortest_paths(g,boostitemlist[pathpair[0]], boost::distance_map(distanceMap).predecessor_map(predecessorMap));
         //show the shortest path if it exists
         if (predecessorMap[boostitemlist[pathpair[1]]]==boostitemlist[pathpair[1]])
+        {
             l->setText("there's no path from this source to this destination");
+            l->setStyleSheet("color: red");
+        }
         else
         {
             QString s="Solution with DAG's algorithm :\nthe minimum distance is : ";
             s+=QString::number(distanceMap[boostitemlist[pathpair[1]]]);
             l->setText(s);
+
+
+            //highlight pathitems
+            int goalkey=boostitemlist[pathpair[1]]; //The key of the goal
+            int sourcekey=boostitemlist[pathpair[0]]; //The key of the source
+            //color the path buttons and labels and set the lines to be colored in drawevent
+            itemlist[goalkey]->setStyleSheet("background:#808000");
+            for(int jumper=goalkey,jumperpred=0; jumper != sourcekey  ; jumper = predecessorMap[jumper])
+            {
+                jumperpred=predecessorMap[jumper];
+                Button * bj=boostitemlist.key(jumper),*bjp=boostitemlist.key(jumperpred);
+
+                int k= bjp->relationexists(bj);
+                itemrelations[bjp][k].color=3;
+
+                itemrelations[bjp][k].label->setStyleSheet("color:#808000");
+                itemlist[jumperpred]->setStyleSheet("background:#808000");
+
+            }
+
         }
     }
     algo=none;
     delete[] pathpair;
 }
 
+void mainwindow::Reset()
+{
+    //remove colors from the current graph
+    for(int i=0;i<itemlist.size();i++)
+    {
+        for(int j=0;j<itemrelations[itemlist[i]].size();j++)
+        {
+            itemrelations[itemlist[i]][j].color=0;
+            itemrelations[itemlist[i]][j].label->setStyleSheet("");
+        }
+       itemlist[i]->setStyleSheet("");
+       l->setText("->Graph Solver<-");
+       l->setStyleSheet("");
+    }
+}
+
+void mainwindow::Deleteall()
+{
+    //delete all buttons,lines and labels
+    for(int i=0;i<itemlist.size();i++)
+    {
+        for(int j=0;j<itemrelations[itemlist[i]].size();j++)
+        {
+            delete itemrelations[itemlist[i]][j].line;
+            delete itemrelations[itemlist[i]][j].label;
+        }
+        itemrelations[itemlist[i]].clear();
+        delete itemlist[i] ;
+    }
+    //empty the containers
+    itemlist.clear();
+    itemrelations.clear();
+    itemn=0;
+    checked=false;
+    checkeditem=NULL;
+    l->setText("->Graph Solver<-");
+    l->setStyleSheet("");
+}
 
 
 
